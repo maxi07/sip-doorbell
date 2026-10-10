@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from custom_components import sip_doorbell as integration
 from custom_components.sip_doorbell import config_flow, diagnostics, event
 from custom_components.sip_doorbell.const import (
+    CONF_AUTH_USERNAME,
     CONF_DEVICE_NAME,
     CONF_LISTEN_PORT,
     CONF_REGISTRAR,
@@ -32,7 +33,10 @@ class PlatformTests(unittest.IsolatedAsyncioTestCase):
     async def test_config_form_resolution_conflict_and_creation(self):
         flow = config_flow.SIPDoorbellConfigFlow()
         flow.hass = NS(async_add_executor_job=AsyncMock())
-        self.assertEqual((await flow.async_step_user())["step_id"], "user")
+        form = await flow.async_step_user()
+        self.assertEqual(form["step_id"], "user")
+        configured = dict(self.entry.data, **{CONF_AUTH_USERNAME: "auth@registrar"})
+        self.assertEqual(form["data_schema"](configured), configured)
         with (
             patch.object(flow, "async_set_unique_id", AsyncMock()) as unique,
             patch.object(flow, "_abort_if_unique_id_configured"),
@@ -135,5 +139,8 @@ class PlatformTests(unittest.IsolatedAsyncioTestCase):
         result = await diagnostics.async_get_config_entry_diagnostics(hass, self.entry)
         self.assertEqual(result["entry"]["password"], "REDACTED")
         self.assertEqual(result["entry"]["username"], "REDACTED")
+        self.entry.data[CONF_AUTH_USERNAME] = "private-auth-name"
+        result = await diagnostics.async_get_config_entry_diagnostics(hass, self.entry)
+        self.assertEqual(result["entry"][CONF_AUTH_USERNAME], "REDACTED")
         self.assertEqual(self.entry.data["password"], "p")
         self.assertEqual(result["active_calls"], 2)

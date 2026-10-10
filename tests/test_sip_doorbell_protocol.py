@@ -14,6 +14,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 import custom_components.sip_doorbell as integration_module
 from custom_components.sip_doorbell import sip
 from custom_components.sip_doorbell.const import (
+    CONF_AUTH_USERNAME,
     CONF_REGISTRAR,
     CONF_REGISTRAR_PORT,
     event_unique_id,
@@ -77,6 +78,40 @@ class ProtocolTests(unittest.TestCase):
 
 
 class RegistrationTests(unittest.IsolatedAsyncioTestCase):
+    async def test_distinct_digest_username_preserves_sip_identity(self) -> None:
+        client = sip.SIPDoorbellClient.__new__(sip.SIPDoorbellClient)
+        client.entry = SimpleNamespace(
+            data={
+                CONF_USERNAME: "**71",
+                CONF_AUTH_USERNAME: "nutzer-1@speedport.ip",
+                CONF_PASSWORD: "secret",
+                CONF_REGISTRAR: "speedport.ip",
+                CONF_REGISTRAR_PORT: 5060,
+            }
+        )
+        client._contact = "192.0.2.10:5062"
+        client._sequence = 10
+        challenge = sip.SIPMessage(
+            status=401,
+            headers={"Www-Authenticate": ['Digest realm="speedport.ip", nonce="n"']},
+        )
+        packets: list[str] = []
+
+        async def send(payload: bytes, method: str, sequence: int) -> sip.SIPMessage:
+            packets.append(payload.decode())
+            return challenge if len(packets) == 1 else sip.SIPMessage(status=200)
+
+        client._send_and_wait = AsyncMock(side_effect=send)
+        await client._register_once()
+
+        self.assertEqual(len(packets), 2)
+        for packet in packets:
+            self.assertIn("From: <sip:**71@speedport.ip>", packet)
+            self.assertIn("To: <sip:**71@speedport.ip>", packet)
+            self.assertIn("Contact: <sip:**71@192.0.2.10:5062>", packet)
+        self.assertNotIn("Authorization:", packets[0])
+        self.assertIn('Authorization: Digest username="nutzer-1@speedport.ip"', packets[1])
+
     async def test_invite_emits_ring_without_answering_call(self) -> None:
         client = sip.SIPDoorbellClient.__new__(sip.SIPDoorbellClient)
         client._transport = MagicMock()

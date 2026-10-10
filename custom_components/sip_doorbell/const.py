@@ -8,6 +8,7 @@ PLATFORMS = ["event"]
 CONF_REGISTRAR = "registrar"
 CONF_REGISTRAR_PORT = "registrar_port"
 CONF_USERNAME = "username"
+CONF_AUTH_USERNAME = "auth_username"
 CONF_PASSWORD = "password"
 CONF_LISTEN_PORT = "listen_port"
 CONF_DEVICE_NAME = "device_name"

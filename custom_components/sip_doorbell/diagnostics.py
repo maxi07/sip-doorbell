@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import CONF_AUTH_USERNAME, DOMAIN
 from .sip import SIPDoorbellClient
 
 
@@ -19,6 +19,8 @@ async def async_get_config_entry_diagnostics(
     client: SIPDoorbellClient = hass.data[DOMAIN][entry.entry_id]
     data = dict(entry.data)
     data[CONF_USERNAME] = "REDACTED"
+    if CONF_AUTH_USERNAME in data:
+        data[CONF_AUTH_USERNAME] = "REDACTED"
     data[CONF_PASSWORD] = "REDACTED"
     return {
         "entry": data,

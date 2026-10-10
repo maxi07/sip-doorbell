@@ -11,6 +11,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
+    CONF_AUTH_USERNAME,
     CONF_DEVICE_NAME,
     CONF_LISTEN_PORT,
     CONF_REGISTRAR,
@@ -68,6 +69,7 @@ class SIPDoorbellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_REGISTRAR_PORT, default=DEFAULT_REGISTRAR_PORT
                 ): vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
                 vol.Required(CONF_USERNAME): str,
+                vol.Optional(CONF_AUTH_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
                 vol.Required(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT): vol.All(
                     vol.Coerce(int), vol.Range(min=1024, max=65535)

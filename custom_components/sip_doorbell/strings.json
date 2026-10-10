@@ -8,6 +8,7 @@
           "registrar": "FRITZ!Box / registrar",
           "registrar_port": "Registrar port",
           "username": "SIP username",
+          "auth_username": "Authentication username (optional; defaults to SIP username)",
           "password": "SIP password",
           "listen_port": "Local UDP listen port",
           "device_name": "Device name"

@@ -59,6 +59,13 @@ For manual installation, copy `custom_components/sip_doorbell` into the
 `custom_components` directory of the Home Assistant configuration and restart
 Home Assistant.
 
+Registrars with a separate digest identity can use the optional
+**Authentication username** field. Keep **SIP username** as the user part of
+the SIP address (without `sip:` or `@registrar`); enter the registrar's full
+authentication name in the optional field. Existing entries without this field
+continue to authenticate with the SIP username. A new value requires a newly
+configured entry; do not post authentication details in diagnostics or logs.
+
 ## FRITZ!Box setup
 
 1. Create a dedicated IP telephone in **Telephony > Telephony Devices**.

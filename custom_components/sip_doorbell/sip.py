@@ -20,6 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .const import (
     CALL_TIMEOUT,
+    CONF_AUTH_USERNAME,
     CONF_LISTEN_PORT,
     CONF_REGISTRAR,
     CONF_REGISTRAR_PORT,
@@ -324,6 +325,7 @@ class SIPDoorbellClient:
 
     async def _register_once(self) -> None:
         username = self.entry.data[CONF_USERNAME]
+        auth_username = self.entry.data.get(CONF_AUTH_USERNAME) or username
         password = self.entry.data[CONF_PASSWORD]
         host = self.entry.data[CONF_REGISTRAR]
         port = self.entry.data[CONF_REGISTRAR_PORT]
@@ -343,7 +345,7 @@ class SIPDoorbellClient:
             "Proxy-Authenticate" if proxy_auth else "WWW-Authenticate"
         )
         authorization = digest_authorization(
-            challenge, username, password, "REGISTER", uri
+            challenge, auth_username, password, "REGISTER", uri
         )
         response = await self._send_register(
             self._next_sequence(),
