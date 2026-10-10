@@ -375,15 +375,22 @@ class SIPDoorbellClient:
         authorization: tuple[str, str] | None,
     ) -> SIPMessage:
         host = self.entry.data[CONF_REGISTRAR]
+        # Preserve an explicitly qualified SIP identity without appending
+        # the registrar again. Contact must still point to our local socket.
+        identity = username.removeprefix("sip:")
+        if not identity or identity.count("@") > 1 or "<" in identity or ">" in identity:
+            raise ValueError("invalid SIP username")
+        sip_address = identity if "@" in identity else f"{identity}@{host}"
+        contact_user = identity.split("@", 1)[0]
         lines = [
             f"REGISTER {uri} SIP/2.0",
             f"Via: SIP/2.0/UDP {self._contact};branch=z9hG4bK-{_token()};rport",
             "Max-Forwards: 70",
-            f"From: <sip:{username}@{host}>;tag={from_tag}",
-            f"To: <sip:{username}@{host}>",
+            f"From: <sip:{sip_address}>;tag={from_tag}",
+            f"To: <sip:{sip_address}>",
             f"Call-ID: {call_id}",
             f"CSeq: {sequence} REGISTER",
-            f"Contact: <sip:{username}@{self._contact}>",
+            f"Contact: <sip:{contact_user}@{self._contact}>",
             f"Expires: {int(REGISTER_EXPIRES.total_seconds())}",
             "User-Agent: Home Assistant SIP Doorbell",
         ]
